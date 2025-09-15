@@ -1,0 +1,20 @@
+# Python virtual environment
+.venv/
+
+# Data and database files (generated locally, not source code)
+data/*.db
+data/*.sqlite
+data/*.csv
+
+# Machine learning model binaries
+models/*.joblib
+models/*.pkl
+
+# Python cache
+__pycache__/
+*.pyc
+
+# OS and editor files
+.DS_Store
+Thumbs.db
+.vscode/
