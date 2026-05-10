@@ -4,11 +4,20 @@ import sqlite3
 import pandas as pd
 import streamlit as st
 import requests
+from streamlit_autorefresh import st_autorefresh
+from pathlib import Path
 
+BASE_DIR = Path(__file__).resolve().parent.parent
+DB_PATH = BASE_DIR / "data" / "ev_telemetry.db"
 st.set_page_config(page_title="EV Telemetry Predict", layout="wide")
-st.title("🔧 EV Telemetry Predict")
+st.title("EV Telemetry Predict")
+st_autorefresh(interval=3000, key="telemetry_refresh")
 
-vin = st.sidebar.text_input("VIN", "EV001")
+con = sqlite3.connect(DB_PATH)
+vin_options = pd.read_sql("SELECT DISTINCT vin FROM raw ORDER BY vin", con)["vin"].tolist()
+con.close()
+
+vin = st.sidebar.selectbox("VIN", vin_options, index=0)
 n = st.sidebar.slider("Rows to display", 100, 5000, 1000, 100)
 api_n = st.sidebar.slider("Rows to score", 1, 500, 100, 10)
 

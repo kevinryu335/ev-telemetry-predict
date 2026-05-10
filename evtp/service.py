@@ -7,7 +7,7 @@ import json
 import sqlite3
 from dataclasses import dataclass
 from typing import List
-
+from evtp.generator import TelemetryGenerator
 import joblib
 import pandas as pd
 from fastapi import FastAPI
@@ -145,6 +145,20 @@ class PredictionService:
         X = self.fetch_latest_features(vin, n)
         proba = self.model.predict_proba(X)[:, 1]
         return proba.tolist()
+    
+    def simulate(self, vin: str, steps: int = 100):
+        gen = TelemetryGenerator(vins=[vin])
+
+        rows = list(gen.stream_rows(rows=steps))
+        records = [TelemetryRecord(**row) for row in rows]
+
+        result = self.ingest_records(records, recompute_features=True)
+
+        return {
+            "simulated_rows": steps,
+            "vin": vin,
+            **result
+        }
 # ----- FastAPI wiring -----
 
 app = FastAPI(title="EV Telemetry Predict API")
@@ -184,3 +198,7 @@ def predict(req: PredictRequest):
 def ingest(req: IngestRequest):
     result = svc.ingest_records(req.records, recompute_features=req.recompute_features)
     return {"status": "ok", **result}
+
+@app.post("/simulate")
+def simulate(vin: str, steps: int = 100):
+    return svc.simulate(vin, steps)
